@@ -2,11 +2,10 @@ from PIL import Image
 import os
 import sys, getopt
 
-source_path = './data'
-result_path = './doc.pdf'
-
-
 def main(argv):
+    source_path = './data'
+    result_path = './'
+    file_name = 'doc.pdf'
     try:
         opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
     except getopt.GetoptError:
@@ -18,10 +17,13 @@ def main(argv):
             print
             'converter.py -i <input> -o <outputfile>'
             sys.exit()
-        elif opt in ("-i", "--ifile"):
+        elif opt in ("-i", "--ifile") and file_name == 'doc.pdf':
             source_path = arg
+            file_name = source_path.split('/')[-1] + '.pdf'
         elif opt in ("-o", "--ofile"):
             result_path = arg
+        elif opt in ("-n", "--name"):
+            file_name = arg
 
     files = os.listdir(source_path)
     files.sort()
@@ -30,7 +32,8 @@ def main(argv):
         img = Image.open(r''+source_path+'/'+file)
         width, height = img.size
         if width > height:
-            img = img.rotate(90)
+            img = img.rotate(90, expand=True)
+        img.thumbnail(size=(1000, 1000))
         rgb = img.convert('RGB')
         images.append(rgb)
 
@@ -38,9 +41,15 @@ def main(argv):
     if not exists:
         os.makedirs(result_path)
     img = images.pop(0)
-    img.save(r'' + result_path , save_all=True, append_images=images)
+    img.save(r'' + result_path + "/" + file_name , save_all=True, append_images=images)
     print('Done!')
 
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    args=[]
+    try:
+        args = sys.argv[1:]
+    except Exception:
+        print('without arguments')
+
+    main(args)
